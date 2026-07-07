@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+IMAGE="agent-in-container:latest"
+
+mounts=()
+for cfg in .claude .agents .opencode .codex .pi; do
+  host_dir="$HOME/$cfg"
+  if [ -d "$host_dir" ]; then
+    mounts+=(-v "${host_dir}:/home/agent/${cfg}:ro")
+  fi
+done
+
+if [ -f "$HOME/.claude.json" ]; then
+  mounts+=(-v "${HOME}/.claude.json:/home/agent/.claude.json:ro")
+fi
+
+if [ -d "$HOME/.config/opencode" ]; then
+  mounts+=(-v "${HOME}/.config/opencode:/home/agent/.config/opencode:ro")
+fi
+
+AGENT="${1:-}"
+[ -n "$AGENT" ] && shift
+
+DOCKER_SOCK="/var/run/docker.sock"
+run_user=(--user "$(id -u):$(id -g)" -e HOME=/home/agent -e DISABLE_AUTOUPDATER=1)
+if [ -S "$DOCKER_SOCK" ]; then
+  # on Docker Desktop /var/run/docker.sock is a symlink into ~/.docker/run/ —
+  # resolve it, since bind-mounting the symlink itself leaves a dangling link inside
+  real_sock="$(cd "$(dirname "$DOCKER_SOCK")" && readlink -f "$(basename "$DOCKER_SOCK")" 2>/dev/null || python3 -c "import os;print(os.path.realpath('$DOCKER_SOCK'))")"
+  sock_gid="$(stat -f '%g' "$real_sock" 2>/dev/null || stat -c '%g' "$real_sock")"
+  mounts+=(-v "${real_sock}:${DOCKER_SOCK}")
+  run_user+=(--group-add "$sock_gid")
+  # Docker Desktop (macOS): the socket's real owner inside the VM is root:root —
+  # the host-side stat gid above is a FUSE artifact and doesn't grant access there.
+  # Native Linux: this is a harmless no-op duplicate of root's own group.
+  run_user+=(--group-add 0)
+fi
+
+if [ -z "$AGENT" ]; then
+  exec docker run --rm -it \
+    "${run_user[@]}" \
+    "${mounts[@]}" \
+    -v "${PWD}:/workspace" \
+    -w /workspace \
+    "$IMAGE"
+fi
+
+case "$AGENT" in
+  claude)
+    cmd=(claude --dangerously-skip-permissions "$@")
+    ;;
+  codex)
+    cmd=(codex --dangerously-bypass-approvals-and-sandbox "$@")
+    ;;
+  opencode)
+    cmd=(opencode --auto "$@")
+    ;;
+  pi)
+    cmd=(pi "$@")
+    ;;
+  *)
+    cmd=("$AGENT" "$@")
+    ;;
+esac
+
+# entrypoint is bash; -c expects a single command string
+printf -v cmd_str '%q ' "${cmd[@]}"
+
+exec docker run --rm -it \
+  "${run_user[@]}" \
+  "${mounts[@]}" \
+  -v "${PWD}:/workspace" \
+  -w /workspace \
+  "$IMAGE" -c "$cmd_str"
