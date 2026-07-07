@@ -1,4 +1,4 @@
-# agent-in-container
+# agent-container
 
 Docker image bundling multiple AI coding agent CLIs in one sandboxed environment, so any of them can be run against a project dir without touching host system directly.
 
@@ -25,8 +25,8 @@ Docker image bundling multiple AI coding agent CLIs in one sandboxed environment
 
 Two-layer image, split so agent CLIs (updated daily) rebuild fast without reinstalling all the slow-changing system/python deps:
 
-- `Dockerfile.base` — node base image + all system/python deps (git, python3, calibre, poppler, docling, etc). Tag: `agent-in-container-base:latest`. Rebuild only when deps change.
-- `Dockerfile` — `FROM agent-in-container-base:latest`, installs just the agent CLIs via npm. Tag: `agent-in-container:latest`. Rebuild daily to pick up agent updates.
+- `Dockerfile.base` — node base image + all system/python deps (git, python3, calibre, poppler, docling, etc). Tag: `agent-container-base:latest`. Rebuild only when deps change.
+- `Dockerfile` — `FROM agent-container-base:latest`, installs just the agent CLIs via npm. Tag: `agent-container:latest`. Rebuild daily to pick up agent updates.
 - `build-base.sh` — builds/tags the base image.
 - `build-agents.sh` — `--no-cache` rebuild of agents image only, so npm installs always fetch latest.
 - `agent-container` — standalone `docker run` wrapper script (no compose). Symlink onto `$PATH` and invoke from any project dir.
@@ -38,7 +38,7 @@ First time (and whenever base deps change): `./build-base.sh`, then `./build-age
 Put `agent-container` on `$PATH`, e.g.:
 
 ```
-ln -s /path/to/agent-in-container/agent-container /usr/local/bin/agent-container
+ln -s /path/to/agent-container/agent-container /usr/local/bin/agent-container
 ```
 
 Then from any project root:

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=agent-in-container-base:latest
+ARG BASE_IMAGE=agent-container-base:latest
 FROM ${BASE_IMAGE}
 
 RUN npm install -g \

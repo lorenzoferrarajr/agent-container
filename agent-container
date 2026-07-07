@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="agent-in-container:latest"
+IMAGE="agent-container:latest"
 
 mounts=()
 for cfg in .claude .agents .opencode .codex .pi; do
