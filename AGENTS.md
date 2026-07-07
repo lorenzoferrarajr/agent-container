@@ -84,3 +84,4 @@ To pick up latest agent CLI versions: `./build-agents.sh` (daily, e.g. via cron)
 - "Safe space" = agents run isolated in container, can't write outside mounted workdir + config dirs.
 - Config dirs are rw (see above) so agents can manage their own auth/settings — not a sandbox against the agent itself, just isolation from the rest of the host filesystem.
 - No agent should be given host system access beyond these mounts.
+- Keep `README.md` in sync with any change made here (or to the project) that affects usage, structure, or design — update both files together, don't let them drift.

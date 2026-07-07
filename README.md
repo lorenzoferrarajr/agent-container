@@ -89,4 +89,4 @@ To pick up latest agent CLI versions: `./build-agents.sh` (daily, e.g. via cron)
 
 ## License
 
-No license specified yet — add one before relying on this being reusable by others.
+MIT — see [LICENSE](LICENSE).
