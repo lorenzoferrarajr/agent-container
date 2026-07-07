@@ -7,16 +7,16 @@ mounts=()
 for cfg in .claude .agents .opencode .codex .pi; do
   host_dir="$HOME/$cfg"
   if [ -d "$host_dir" ]; then
-    mounts+=(-v "${host_dir}:/home/agent/${cfg}:ro")
+    mounts+=(-v "${host_dir}:/home/agent/${cfg}")
   fi
 done
 
 if [ -f "$HOME/.claude.json" ]; then
-  mounts+=(-v "${HOME}/.claude.json:/home/agent/.claude.json:ro")
+  mounts+=(-v "${HOME}/.claude.json:/home/agent/.claude.json")
 fi
 
 if [ -d "$HOME/.config/opencode" ]; then
-  mounts+=(-v "${HOME}/.config/opencode:/home/agent/.config/opencode:ro")
+  mounts+=(-v "${HOME}/.config/opencode:/home/agent/.config/opencode")
 fi
 
 AGENT="${1:-}"

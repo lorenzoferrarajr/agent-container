@@ -14,14 +14,12 @@ Docker image bundling multiple AI coding agent CLIs in one sandboxed environment
 
 - Container entrypoint: bash prompt (no agent auto-starts). User picks and launches whichever agent CLI they want from the shell.
 - Working dir: the host dir the container was started from is mounted into container with **read-write** access — agents operate here.
-- Config dirs mounted **read-only**, each agent reads its own creds/settings but can't modify them from inside container:
-  - `~/.claude` -> read-only
-  - `~/.agents` -> read-only
-  - `~/.opencode` -> read-only
-  - `~/.codex` -> read-only
-  - `~/.pi` -> read-only (pi CLI config/instructions dir)
-  - `~/.claude.json` -> read-only (claude code needs this file too, not just `~/.claude`)
-  - `~/.config/opencode` -> read-only (opencode needs this too, not just `~/.opencode`)
+- Config dirs mounted **read-write** — each agent can manage its own creds/settings/session state from inside the container, and it persists back to the host (e.g. `/login` inside the container works and sticks):
+  - `~/.claude`, `~/.claude.json`
+  - `~/.agents`
+  - `~/.opencode`, `~/.config/opencode`
+  - `~/.codex`
+  - `~/.pi`
 
 ## Structure
 
@@ -55,7 +53,7 @@ agent-container pi         # pi (no gate found to bypass, runs as-is)
 
 Extra args after the agent name are forwarded to the CLI, e.g. `agent-container claude "fix the bug"`.
 
-Mounts `$PWD` -> `/workspace` (rw), each existing `~/.claude ~/.agents ~/.opencode ~/.codex ~/.pi` -> `/home/agent/<name>` (ro, skipped if absent on host), plus `~/.claude.json` -> `/home/agent/.claude.json` (ro, if present) and `~/.config/opencode` -> `/home/agent/.config/opencode` (ro, if present).
+Mounts `$PWD` -> `/workspace` (rw). All config dirs/files mount rw too, skipped if absent on host: `~/.claude ~/.agents ~/.opencode ~/.codex ~/.pi` -> `/home/agent/<name>`, `~/.claude.json` -> `/home/agent/.claude.json`, `~/.config/opencode` -> `/home/agent/.config/opencode`.
 
 Container runs as the host user's uid:gid (`--user "$(id -u):$(id -g)"`), not root — claude refuses `--dangerously-skip-permissions` as root. `$HOME` is forced to `/home/agent` (world-writable dir baked into the base image, `chmod 1777`) since the numeric uid has no `/etc/passwd` entry inside the container.
 
@@ -83,5 +81,6 @@ To pick up latest agent CLI versions: `./build-agents.sh` (daily, e.g. via cron)
 
 ## Notes
 
-- "Safe space" = agents run isolated in container, can't write outside mounted workdir, can't write to host config dirs (ro mount enforces this).
+- "Safe space" = agents run isolated in container, can't write outside mounted workdir + config dirs.
+- Config dirs are rw (see above) so agents can manage their own auth/settings — not a sandbox against the agent itself, just isolation from the rest of the host filesystem.
 - No agent should be given host system access beyond these mounts.
