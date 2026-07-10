@@ -24,6 +24,12 @@ if [ -d "$HOME/.config/opencode" ]; then
   mounts+=(-v "${HOME}/.config/opencode:/home/agent/.config/opencode")
 fi
 
+# opencode stores model auth (auth.json) in its XDG data dir, not .config —
+# without this mount, host-side `opencode auth login` never shows up in-container
+if [ -d "$HOME/.local/share/opencode" ]; then
+  mounts+=(-v "${HOME}/.local/share/opencode:/home/agent/.local/share/opencode")
+fi
+
 AGENT="${1:-}"
 [ -n "$AGENT" ] && shift
 

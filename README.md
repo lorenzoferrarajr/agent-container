@@ -46,7 +46,7 @@ Extra args after the agent name are forwarded to the CLI, e.g. `agent-container 
 - **Config dirs** mount **read-write** too — each agent manages its own creds/settings/session state from inside the container, and it persists back to the host (e.g. `/login` inside the container works and sticks):
   - `~/.claude`, `~/.claude.json`
   - `~/.agents`
-  - `~/.opencode`, `~/.config/opencode`
+  - `~/.opencode`, `~/.config/opencode`, `~/.local/share/opencode` (model auth lives here, not `.config`)
   - `~/.codex`
   - `~/.pi`
 - `~/.gitconfig` mounts **read-only** if present — gives commits a real author identity without granting push/GitHub credentials.
