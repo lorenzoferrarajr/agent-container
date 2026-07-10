@@ -30,6 +30,13 @@ if [ -d "$HOME/.local/share/opencode" ]; then
   mounts+=(-v "${HOME}/.local/share/opencode:/home/agent/.local/share/opencode")
 fi
 
+# opencode also keeps TUI/session state (e.g. last-used model) in its XDG
+# state dir, distinct from both of the above — without it, model selection
+# resets to default every container run
+if [ -d "$HOME/.local/state/opencode" ]; then
+  mounts+=(-v "${HOME}/.local/state/opencode:/home/agent/.local/state/opencode")
+fi
+
 AGENT="${1:-}"
 [ -n "$AGENT" ] && shift
 
