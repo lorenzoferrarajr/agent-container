@@ -49,6 +49,7 @@ Extra args after the agent name are forwarded to the CLI, e.g. `agent-container 
   - `~/.opencode`, `~/.config/opencode`
   - `~/.codex`
   - `~/.pi`
+- `~/.gitconfig` mounts **read-only** if present — gives commits a real author identity without granting push/GitHub credentials.
 - Container runs as the host user's uid:gid (not root — Claude refuses `--dangerously-skip-permissions` as root). `$HOME` is forced to `/home/agent` (world-writable, baked into the base image).
 
 ## Structure
