@@ -69,7 +69,13 @@ case "$AGENT" in
     cmd=(claude --dangerously-skip-permissions "$@")
     ;;
   codex)
-    cmd=(codex --dangerously-bypass-approvals-and-sandbox "$@")
+    # headroom (see ~/.codex/config.toml) points codex at a proxy on
+    # 127.0.0.1:8788 running on the host — inside the container that's our
+    # own loopback, not the host's, so redirect to host.docker.internal.
+    cmd=(codex --dangerously-bypass-approvals-and-sandbox \
+      -c 'openai_base_url=http://host.docker.internal:8788/v1' \
+      -c 'model_providers.headroom.base_url=http://host.docker.internal:8788/v1' \
+      "$@")
     ;;
   opencode)
     cmd=(opencode --auto "$@")
@@ -85,8 +91,16 @@ esac
 # entrypoint is bash; -c expects a single command string
 printf -v cmd_str '%q ' "${cmd[@]}"
 
+extra_hosts=()
+if [ "$AGENT" = "codex" ]; then
+  # Docker Desktop (Mac/Windows) already provides host.docker.internal;
+  # plain Docker Engine on Linux needs it added explicitly.
+  extra_hosts=(--add-host "host.docker.internal:host-gateway")
+fi
+
 exec docker run --rm -it \
   "${run_user[@]}" \
+  "${extra_hosts[@]}" \
   "${mounts[@]}" \
   -v "${PWD}:/workspace" \
   -w /workspace \
